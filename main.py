@@ -1,13 +1,13 @@
-from machine import Pin, PWM
+from machine import Pin, PWM, I2C
 import time
 from ms5611 import MS5611
 import os
 
 # Use the exact pin we want to test
-green = Pin(2, Pin.OUT)
+green = Pin(27, Pin.OUT)
 red = Pin(28, Pin.OUT)
-blue = Pin(17, Pin.OUT)
-switch = Pin(0, Pin.IN, Pin.PULL_UP)
+blue = Pin(26, Pin.OUT)
+switch = Pin(16, Pin.IN, Pin.PULL_UP)
 
 servo = PWM(Pin(15))
 servo.freq(50)
@@ -33,7 +33,8 @@ with open(FILENAME, "w") as f:
     f.write("Timestamp_ms,Altitude_m\n")
     print(f"Started fresh log file: {FILENAME}")
 
-i2c = machine.I2C(0, sda=machine.Pin(4), scl=machine.Pin(5), freq=400000)
+i2c = I2C(0, sda=Pin(4), scl=Pin(5), freq=100000)
+time.sleep_ms(200)  # let the sensor settle after power-up
 print("Scanning I2C bus...")
 devices = i2c.scan()
 
@@ -43,7 +44,17 @@ if devices:
 else:
     print("No I2C devices found. Check your VCC/GND and SDA/SCL connections!")
 
-sensor = MS5611(i2c, address=0x77)
+sensor = None
+for attempt in range(5):
+    try:
+        sensor = MS5611(i2c, address=0x77)
+        break
+    except OSError:
+        print("Baro init failed, retrying...", attempt)
+        time.sleep_ms(200)
+
+if sensor is None:
+    print("Baro not responding")
 
 def set_servo(angle):
     servo.duty_ns(int(angle))
