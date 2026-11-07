@@ -3,12 +3,13 @@ import time
 from ms5611 import MS5611
 import os
 
-# Use the exact pin we want to test
+# The RGB and Switch Pins
 green = Pin(27, Pin.OUT)
 red = Pin(28, Pin.OUT)
 blue = Pin(26, Pin.OUT)
 switch = Pin(16, Pin.IN, Pin.PULL_UP)
 
+#Servo
 servo = PWM(Pin(15))
 servo.freq(50)
 
@@ -120,7 +121,6 @@ while True:
                 armedCount=0
             armed_time+=.1
             with open(FILENAME, "a") as f:
-                # Format as comma-separated values ending in a newline
                 f.write(f"{armed_time},{alt:.2f}\n")
             print(f"Logged: {armed_time},{alt:.2f}")
             
